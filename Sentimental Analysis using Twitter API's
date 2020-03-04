@@ -1,0 +1,57 @@
+import tweepy, datetime
+from textblob import TextBlob
+
+access_token = '**********************'
+access_token_secret = '*************************'
+consumer_key = '****************************'
+consumer_secret = '****************************************'
+
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+
+api = tweepy.API(auth)
+
+[positive, negative] = [0,0]
+sent = ''
+result = 0
+
+def query_twitter(q, maximum_tweets=100):
+    for tweet in tweepy.Cursor(api.search, q=q).items(maximum_tweets):
+        if (datetime.datetime.now() - tweet.created_at).days < 2:
+            sentiment(tweet.text)
+    print([positive, negative])
+    print("User: "+ "'" + q + "'" + " is " + str("{0:.2f}".format(result)) + "% " )
+
+def sentiment(tweet):
+    global positive
+    global negative
+    analysis = TextBlob(tweet)
+    if analysis.sentiment.polarity >0:
+        print('Positive: ' + tweet + '\n')
+        positive = positive + 1
+    elif analysis.sentiment.polarity < 0:
+        print('Negative: ' + tweet + '\n')
+        negative = negative + 1
+
+    return sentiment_percent(positive, negative)
+
+def sentiment_percent(positive, negative):
+    global sent
+    global result
+    total = positive + negative
+    if positive > negative:
+        sent = "Positive"
+        try:
+            result = positive / total * 100
+        except:
+            print("An error has occurred !!")
+    else:
+        sent = "Negative"
+        try:
+            result = negative / total * 100
+        except:
+            print("An error has occurred !!")
+    return {sent:result}
+
+query_twitter('trump', 500)
+query_twitter('trump', 500)
